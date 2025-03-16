@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-const userSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({ //creating user schema
     userName: {
         type: String,
         required: true,
@@ -43,17 +43,17 @@ const userSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function (next) { //using pre hook to check if the password is been modified and encrypting it before creating user.
     if (!this.isModified("password")) return next();
     this.password = await bcrypt.hash(this.password, 10);
     next();
 })
 
-userSchema.methods.isPasswordCorrect = async function (password) {
+userSchema.methods.isPasswordCorrect = async function (password) { //method to check if the password is correct or not.
     return bcrypt.compare(password, this.password);
 }
 
-userSchema.methods.generateAccessToken = async function () {
+userSchema.methods.generateAccessToken = async function () { //method to generate Access token
     return jwt.sign(
         {
             _id: this._id,
@@ -67,7 +67,7 @@ userSchema.methods.generateAccessToken = async function () {
         }
     )
 }
-userSchema.methods.generateRefreshToken = async function () {
+userSchema.methods.generateRefreshToken = async function () { //method to generate Refresh token
     return jwt.sign(
         {
             _id: this._id

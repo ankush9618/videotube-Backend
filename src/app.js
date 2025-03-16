@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 
 const app = express();
 
-app.use(cors({
+app.use(cors({ //configuring CORS-cross origin resourse sharing to allow access the routes from auth paths
     origin: process.env.CORS_ORIGIN
 }))
 app.use(express.json({ limit: "16kb" }));
@@ -16,6 +16,6 @@ app.use(cookieParser());
 
 import userRouter from "./routes/user.routes.js";
 
-app.use("/api/v1/users", userRouter)
+app.use("/api/v1/users", userRouter) //creating user routes
 
 export { app }

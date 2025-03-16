@@ -4,7 +4,7 @@ import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router();
 
-router.route("/register").post(
+router.route("/register").post( //creating localhost:3000/api/v1/user/register route and uploading files in server
     upload.fields([
         {
             name: "avatar",
