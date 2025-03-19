@@ -210,7 +210,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => { //Change Curren
         );
 })
 
-const getUserDetails = asyncHandler(async (req, res) => {
+const getUserDetails = asyncHandler(async (req, res) => { //Fetch USer Details
     return res
         .status(200)
         .json(
@@ -218,7 +218,7 @@ const getUserDetails = asyncHandler(async (req, res) => {
         )
 })
 
-const updateUserDetails = asyncHandler(async (req, res) => {
+const updateUserDetails = asyncHandler(async (req, res) => { //Update User FullName and Email
     const { fullName, email } = req.body;
     //console.log(fullName, email)
     if (!fullName || !email) {
@@ -240,4 +240,74 @@ const updateUserDetails = asyncHandler(async (req, res) => {
 
 })
 
-export { registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword, getUserDetails, updateUserDetails };
+const updateAvatar = asyncHandler(async (req, res) => { //Update Avatar
+    const avatarFilePath = req.file?.path;
+    if (!avatarFilePath) {
+        throw new ApiError(401, "Avatar Image is Required");
+    }
+
+    const avatar = await uploadToCloudinary(avatarFilePath);
+    if (!avatar) {
+        throw new ApiError(501, "Error Uplading avatar to Coludinary");
+    }
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                avatar: avatar.url
+            }
+        },
+        {
+            new: true
+        }
+    ).select("-password -refreshToken");
+
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, "Avatar Updated Successfully", user)
+        )
+})
+
+const updateCoverImage = asyncHandler(async (req, res) => { //Update Cover Image
+    const coverImageFilePath = req.file?.path;
+    if (!coverImageFilePath) {
+        throw new ApiError(401, "Cover Image Image is Required");
+    }
+
+    const coverImage = await uploadToCloudinary(coverImageFilePath);
+    if (!coverImage) {
+        throw new ApiError(501, "Error Uplading Cover Image to Coludinary");
+    }
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                coverImage: coverImage.url
+            }
+        },
+        {
+            new: true
+        }
+    ).select("-password -refreshToken");
+
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, "Cover Image Updated Successfully", user)
+        )
+})
+
+export {
+    registerUser,
+    loginUser,
+    logoutUser,
+    refreshAccessToken,
+    changeCurrentPassword,
+    getUserDetails,
+    updateUserDetails,
+    updateAvatar,
+    updateCoverImage
+};
