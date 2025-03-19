@@ -2,7 +2,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { User } from "../models/user.model.js";
-import { uploadToCloudinary } from "../utils/cloudinary.js";
+import { deleteFromCloudinary, uploadToCloudinary } from "../utils/cloudinary.js";
 import { SERVER_OPTIONS } from "../constants.js";
 import jwt from "jsonwebtoken";
 
@@ -250,6 +250,8 @@ const updateAvatar = asyncHandler(async (req, res) => { //Update Avatar
     if (!avatar) {
         throw new ApiError(501, "Error Uplading avatar to Coludinary");
     }
+    console.log(req.user)
+    const avatarUrl = req.user?.avatar;
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
@@ -261,8 +263,10 @@ const updateAvatar = asyncHandler(async (req, res) => { //Update Avatar
             new: true
         }
     ).select("-password -refreshToken");
-
-
+    const deletedResponse = await deleteFromCloudinary(avatarUrl);
+    if (!deletedResponse) {
+        throw new ApiError(501, "Error deleting file from Cloudinary")
+    }
     return res
         .status(200)
         .json(

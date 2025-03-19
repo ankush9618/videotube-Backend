@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs"
+import { ApiError } from "./ApiError.js";
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -22,4 +23,35 @@ const uploadToCloudinary = async (localFilePath) => {
     }
 }
 
-export { uploadToCloudinary };
+
+
+const deleteFromCloudinary = async (cloudinaryUrl) => {
+    try {
+        // Ensure the Cloudinary Public ID is extracted from the URL
+        const regex = /\/([^\/]+)(?=\.[a-z]+$)/;
+        const match = cloudinaryUrl.match(regex);
+        const cloudinaryPublicId = match ? match[1] : null;
+
+        if (!cloudinaryPublicId) {
+            throw new ApiError(400, "Cloudinary Public ID is required");
+        }
+
+        // Delete asset from Cloudinary
+        const deletedResponse = await cloudinary.api.delete_resources([cloudinaryPublicId], { resource_type: "image" });
+
+        // Check if the response indicates success
+        if (deletedResponse?.deleted?.[cloudinaryPublicId] === 'deleted') {
+            return deletedResponse;
+        } else {
+            // Log the detailed response from Cloudinary for debugging
+            throw new ApiError(501, "Error during Deleting from Cloudinary");
+        }
+    } catch (error) {
+        // Log the error and re-throw as ApiError
+        throw new ApiError(501, "Error during Deleting from Cloudinary");
+    }
+};
+
+
+
+export { uploadToCloudinary, deleteFromCloudinary };
