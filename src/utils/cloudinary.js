@@ -8,7 +8,7 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET// Click 'View API Keys' above to copy your API secret
 });
 
-const uploadToCloudinary = async (localFilePath) => {
+const uploadToCloudinary = async (localFilePath) => { //Function to upload image on Cloudinary
     try {
         if (!localFilePath) return null;
         const cloudinaryResponse = await cloudinary.uploader.upload(localFilePath, { resource_type: "auto" });
@@ -25,7 +25,7 @@ const uploadToCloudinary = async (localFilePath) => {
 
 
 
-const deleteFromCloudinary = async (cloudinaryUrl) => {
+const deleteFromCloudinary = async (cloudinaryUrl) => { //Function to delete image from Cloudinary
     try {
         // Ensure the Cloudinary Public ID is extracted from the URL
         const regex = /\/([^\/]+)(?=\.[a-z]+$)/;

@@ -304,6 +304,75 @@ const updateCoverImage = asyncHandler(async (req, res) => { //Update Cover Image
         )
 })
 
+const getUserProfile = asyncHandler(async (req, res) => { //get User Profile Page
+    const { userName } = req.params;
+
+    if (!userName) {
+        throw new ApiError(400, "Invalid Request")
+    }
+
+    const channel = await User.aggregate([
+        {
+            $match: { userName }
+        },
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "channel",
+                as: "subscribers"
+            }
+        },
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "subscriber",
+                as: "subscribedTo"
+            }
+        },
+        {
+            $addFields: {
+                subscriberCount: {
+                    $size: "$subscribers"
+                },
+                subscribedToCount: {
+                    $size: "$subscribedTo"
+                },
+                isSubscribed: {
+                    $cond: {
+                        if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+                        then: true,
+                        else: false
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                userName: 1,
+                email: 1,
+                subscriberCount: 1,
+                subscribedToCount: 1,
+                fullName: 1,
+                coverImage: 1,
+                avatar: 1,
+                isSubscribed: 1
+            }
+        }
+    ]);
+
+    if (!channel?.length) {
+        throw new ApiError(400, "Channel Does Not Exists");
+    }
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, "User Profile Fetched Successfully", channel[0])
+        )
+})
+
 export {
     registerUser,
     loginUser,
