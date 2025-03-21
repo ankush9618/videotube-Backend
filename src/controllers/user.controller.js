@@ -5,6 +5,7 @@ import { User } from "../models/user.model.js";
 import { deleteFromCloudinary, uploadToCloudinary } from "../utils/cloudinary.js";
 import { SERVER_OPTIONS } from "../constants.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -373,6 +374,60 @@ const getUserProfile = asyncHandler(async (req, res) => { //get User Profile Pag
         )
 })
 
+const getWatchHistory = asyncHandler(async (req, res) => {//get Watch History
+    const user = await User.aggregate([
+        {
+            $match: {
+                _id: req.user?._id
+            }
+        },
+        {
+            $lookup: {
+                from: "videos",
+                localField: "watchHistory",
+                foreignField: "_id",
+                as: "watchHistory",
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: "users",
+                            localField: "owner",
+                            foreignField: "_id",
+                            as: "owner",
+                            pipeline: [
+                                {
+                                    $project: {
+                                        userName: 1,
+                                        fullName: 1,
+                                        avatar: 1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields: {
+                            owner: {
+                                $first: "$owner"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ])
+
+    if (!user) {
+        throw new ApiError(400, "Failed to Get Watch History")
+    }
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, "Watch Histrory Fetched Successfully", user)
+        )
+})
+
 export {
     registerUser,
     loginUser,
@@ -382,5 +437,7 @@ export {
     getUserDetails,
     updateUserDetails,
     updateAvatar,
-    updateCoverImage
+    updateCoverImage,
+    getUserProfile,
+    getWatchHistory
 };
